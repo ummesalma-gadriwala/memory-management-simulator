@@ -1,4 +1,4 @@
-// Tasnim
+// Tasnim Noshin
 // Umme Salma Gadriwala
 
 #include <pthread.h>
