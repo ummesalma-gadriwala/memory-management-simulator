@@ -1,11 +1,11 @@
 //Umme Salma
 #include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>
 
 #define BUFFER_SIZE 10
 
 #define OFFSET_MASK ‭4095
-#define PAGES 1048576
+#define PAGES 8
 #define OFFSET_BITS 12
 #define PAGE_SIZE 4096
 /**
@@ -26,7 +26,7 @@ int main(void) {
 		// buff is a pointer to each line/address from the file
 		logicalAddress = atoi(buff);
 		pageNumber = logicalAddress >> OFFSET_BITS;
-		offset = logicalAddress & OFFSET_MASK;
+		offset = logicalAddress & 4095;
 		printf("Virtual addr is %d: Page# = %d & Offset = %d. Physical addr = %d\n",
 		logicalAddress, pageNumber, offset, physicalAddress);
 	}
