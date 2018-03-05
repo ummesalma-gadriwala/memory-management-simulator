@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #define BUFFER_SIZE 10
 
@@ -15,8 +16,8 @@ Page size = 256 bytes = 2048 bits = 2^11
 Number of bits required to represent offset = 11
 Number of bits required to represent page number = 5
 Number of pages = 2^5
-Size of LAS = 2^16
-Size of PAS = 2^15
+Size of LAS = 2^16 bytes = 25536 bytes
+Size of PAS = 2^15 bytes = 32768 bytes
 **/
 struct TLBentry {
 	int pageNumber;
@@ -53,6 +54,16 @@ int main(void) {
 	for (i = 0; i < PAGES; i++) {
 		page_table[i] = -1;
 	}
+	
+	/**************HANDLING PAGE FAULTS**************/
+		// open file in read-only mode
+	int fBS = open("BACKING_STORE.bin", O_RDONLY);
+    if(fBS < 0) return 1; // if file is not correctly opened
+    	// map BACKING_STORE to a memory region
+    void* mmapData = mmap(NULL, 65536, PROT_READ, MAP_PRIVATE, fBS, 0);
+    close(fBS);
+	
+	
 	while (fgets(buff, BUFFER_SIZE, fptr) != NULL) {
 		// buff is a pointer to each line/address from the file
 		logicalAddress = atoi(buff);
@@ -64,8 +75,11 @@ int main(void) {
 		physicalAddress = (frameNumber << OFFSET_BITS) | offset;
 		printf("Virtual address: %d - Page# = %d & Offset = %d. Physical address: %d\n",
 		logicalAddress, pageNumber, offset, physicalAddress);
+		
+		// when page fault occurs
+			// get the page at the pageNumber from the mapped data
+		memcpy(physicalAddress, mmapData + (pageNumber*256), 256);
 	}
-	
 	fclose(fptr);
 	return 0;
 }
