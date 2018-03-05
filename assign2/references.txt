@@ -1,1 +1,8 @@
 mmap: https://techoverflow.net/2013/08/21/a-simple-mmap-readonly-example/
+
+
+
+Assignment 2:
+256 entries in LAS
+256 entries in page table
+128 entries in PAS
