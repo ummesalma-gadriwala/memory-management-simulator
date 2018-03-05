@@ -18,6 +18,7 @@ Number of bits required to represent page number = 5
 Number of pages = 2^8 = 256
 Size of LAS = 2^16 bytes = 25536 bytes
 Size of PAS = 2^15 bytes = 32768 bytes
+Number of frames = 128
 **/
 struct TLBentry {
 	int pageNumber;
