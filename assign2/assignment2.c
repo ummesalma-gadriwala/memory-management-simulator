@@ -8,14 +8,14 @@
 #define BUFFER_SIZE 10
 
 #define OFFSET_MASK 2047
-#define PAGES 32
+#define PAGES 256
 #define OFFSET_BITS 11
 #define PAGE_SIZE 2048
 /**
 Page size = 256 bytes = 2048 bits = 2^11
 Number of bits required to represent offset = 11
 Number of bits required to represent page number = 5
-Number of pages = 2^5
+Number of pages = 2^8 = 256
 Size of LAS = 2^16 bytes = 25536 bytes
 Size of PAS = 2^15 bytes = 32768 bytes
 **/
