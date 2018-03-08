@@ -1,8 +1,8 @@
+#include <sys/mman.h> /*for mmap() function*/
+#include <string.h> /*for memcpy function*/
+#include <fcntl.h> /*for file descriptors*/
+#include <stdlib.h> 
 #include <stdio.h>
-#include <stdlib.h>
-#include <sys/mman.h>
-#include <string.h>
-#include <fcntl.h>
 
 #define INT_SIZE 4
 #define INT_COUNT 10
