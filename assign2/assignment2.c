@@ -52,16 +52,17 @@ int main(void) {
 	char buff[BUFFER_SIZE];
 	unsigned int logicalAddress;
 	int physicalAddress;
+	signed char value;
 	int hitCount = 0; // total number of TLB hits
-	int faultCount = 0; // total number of page-faults
+	int faultCount = 0; // total number of page faults
 	unsigned int pageNumber;
 	int offset;
 	int frameNumber;
 	int i;
 	int page_table[PAGES];
-	int *physical_memory[FRAMES];
+	char *physical_memory[FRAMES];
     for(i = 0; i < FRAMES; i++) {
-        physical_memory[i] = (int *) malloc(PAGE_SIZE);
+        physical_memory[i] = (char *) malloc(PAGE_SIZE);
     }
 	for (i = 0; i < PAGES; i++) {
 		page_table[i] = -1;
@@ -93,15 +94,15 @@ int main(void) {
 			// put it in the next available frame
 			// change the page table entry
 			memcpy(physical_memory[nextFrame % FRAMES], mmapfptr + (pageNumber*256), 256);
-			printf("Page number:%d Frame written: %d\n", pageNumber, nextFrame);
+			//printf("Page number:%d Frame written: %d\n", pageNumber, nextFrame);
 			page_table[pageNumber] = nextFrame%FRAMES;
 			frameNumber = page_table[pageNumber];
 			nextFrame++;
 		}
-		
 		physicalAddress = (frameNumber << OFFSET_BITS) | offset;
-		//printf("Virtual address: %d - Frame# = %d. Physical address: %d\n",
-		//logicalAddress, frameNumber, physicalAddress);
+		value = physical_memory[frameNumber][offset];
+		printf("Virtual address: %d (Frame# = %d) Physical address = %d Value=%d\n",
+		logicalAddress, frameNumber, physicalAddress, value);
 		
 	}
 	munmap(mmapfptr, BS_SIZE);
