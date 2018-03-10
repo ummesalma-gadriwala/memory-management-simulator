@@ -93,17 +93,19 @@ int main(void) {
 			// get the page at the pageNumber from the mapped data
 			// put it in the next available frame
 			// change the page table entry
-			memcpy(physical_memory[nextFrame % FRAMES], mmapfptr + (pageNumber*256), 256);
-			//printf("Page number:%d Frame written: %d\n", pageNumber, nextFrame);
+			memcpy(physical_memory[nextFrame%FRAMES], mmapfptr + (pageNumber*256), 256);
+			for (i = 0; i < PAGES; i++) {
+				if (page_table[i] == nextFrame%FRAMES)
+					page_table[i] = -1;
+			}
 			page_table[pageNumber] = nextFrame%FRAMES;
 			frameNumber = page_table[pageNumber];
 			nextFrame++;
 		}
 		physicalAddress = (frameNumber << OFFSET_BITS) | offset;
 		value = physical_memory[frameNumber][offset];
-		printf("Virtual address: %d (Frame# = %d) Physical address = %d Value=%d\n",
+		printf("Virtual address: %d Physical address = %d Value=%d\n",
 		logicalAddress, frameNumber, physicalAddress, value);
-		
 	}
 	munmap(mmapfptr, BS_SIZE);
 	fclose(fptr);
