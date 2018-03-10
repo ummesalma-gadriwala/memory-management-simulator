@@ -11,10 +11,10 @@
 
 #define BUFFER_SIZE 10
 
-#define OFFSET_MASK 2047
+#define OFFSET_MASK 255
 #define PAGES 256
 #define FRAMES 128
-#define OFFSET_BITS 11
+#define OFFSET_BITS 8
 #define PAGE_SIZE 256
 #define BS_SIZE 65536
 /**
@@ -57,12 +57,16 @@ int main(void) {
 	unsigned int pageNumber;
 	int offset;
 	int frameNumber;
-	int page_table[PAGES];
-	char physical_memory[FRAMES*PAGE_SIZE]; // size 2^15
 	int i;
+	int page_table[PAGES];
+	int *physical_memory[FRAMES];
+    for(i = 0; i < FRAMES; i++) {
+        physical_memory[i] = (int *) malloc(PAGE_SIZE);
+    }
 	for (i = 0; i < PAGES; i++) {
 		page_table[i] = -1;
 	}
+	int nextFrame = 0;
 	
 	/**************HANDLING PAGE FAULTS**************/
 		// open file in read-only mode
@@ -86,17 +90,22 @@ int main(void) {
 		if (frameNumber == -1) {
 			faultCount++;
 			// get the page at the pageNumber from the mapped data
-			memcpy(page_table+pageNumber, mmapfptr + (pageNumber*256), 256);
+			// put it in the next available frame
+			// change the page table entry
+			memcpy(physical_memory[nextFrame % FRAMES], mmapfptr + (pageNumber*256), 256);
+			printf("Page number:%d Frame written: %d\n", pageNumber, nextFrame);
+			page_table[pageNumber] = nextFrame%FRAMES;
 			frameNumber = page_table[pageNumber];
+			nextFrame++;
 		}
 		
 		physicalAddress = (frameNumber << OFFSET_BITS) | offset;
-		printf("Virtual address: %d - Page# = %d & Offset = %d. Physical address: %d\n",
-		logicalAddress, pageNumber, offset, physicalAddress);
-		
+		//printf("Virtual address: %d - Frame# = %d. Physical address: %d\n",
+		//logicalAddress, frameNumber, physicalAddress);
 		
 	}
 	munmap(mmapfptr, BS_SIZE);
 	fclose(fptr);
+	printf("Page faults: %d\n",faultCount);
 	return 0;
 }
