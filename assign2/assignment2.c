@@ -17,6 +17,8 @@
 #define OFFSET_BITS 8
 #define PAGE_SIZE 256
 #define BS_SIZE 65536
+
+#define TLB_SIZE 16
 /**
 Page size = Frame size = 256 bytes = 2048 bits = 2^11
 Number of bits required to represent offset = 11
@@ -27,24 +29,42 @@ Size of PAS = 2^15 bytes = 32768 bytes
 Number of frames = 128
 Number of entries in TLB = 16
 **/
-struct TLBentry {
+typedef struct {
 	int pageNumber;
 	int frameNumber;
-};
+}TLBentry ;
+
+/////////////////////////////////////////////
+TLBentry *TLBarray[TLB_SIZE];
+/////////////////////////////////////////////////
 
 /* return frameNumber corresponding to pageNumber */
 int search_TLB(int pageNumber) {
+	int i;
+	for(i = 0; i < TLB_SIZE; i++){
+		if (TLBarray[i]-> pageNumber == pageNumber){
+			return TLBarray[i]->frameNumber;
+		}
+	}
 	return -1;
+	
 }
 
 /* return 0 if success, -1 if error occurs */
-int TLB_Add(void) {
-	return -1;
+int TLB_Add(TLBentry *newEntry, int position) {
+	TLBarray[position%TLB_SIZE] = newEntry;
+	return position++;
+	
 }
 
 /* return 0 if success, -1 if error occurs */
-int TLB_Update(void) {
-	return -1;
+void TLB_Update(TLBentry *newEntry, int pageNumber) {
+	int i;
+	for(i = 0; i < TLB_SIZE; i++){
+		if (TLBarray[i]-> pageNumber == pageNumber){
+			TLBarray[i] = newEntry;
+		}
+	}
 }
 
 int main(void) {
@@ -57,10 +77,18 @@ int main(void) {
 	int faultCount = 0; // total number of page faults
 	unsigned int pageNumber;
 	int offset;
+	int totalAddr = 0;
 	int frameNumber;
 	int i;
 	int page_table[PAGES];
 	char *physical_memory[FRAMES];
+
+///////////////////////////             
+	
+	for(i = 0; i < TLB_SIZE; i++){
+		TLBarray[i] = (TLBentry *) malloc (sizeof(TLBentry));
+	}
+////////////////////////////////////////////
     for(i = 0; i < FRAMES; i++) {
         physical_memory[i] = (char *) malloc(PAGE_SIZE);
     }
@@ -79,13 +107,21 @@ int main(void) {
 	
 	
 	while (fgets(buff, BUFFER_SIZE, fptr) != NULL) {
+		totalAddr++;
 		// buff is a pointer to each line/address from the file
 		logicalAddress = atoi(buff);
 		pageNumber = logicalAddress >> OFFSET_BITS;
 		offset = logicalAddress & OFFSET_MASK;		
 		// LOOK UP TLB
+		//////////////////////////////////////
+		frameNumber = search_TLB(pageNumber);
+		if(frameNumber != -1){
+			hitCount++;
+		}else{
+		//////////////////////////////////////
 		// LOOK UP IN PAGE TABLE
-		frameNumber = page_table[pageNumber];
+			frameNumber = page_table[pageNumber];
+		}
 		
 		// when page fault occurs
 		if (frameNumber == -1) {
@@ -109,6 +145,15 @@ int main(void) {
 	}
 	munmap(mmapfptr, BS_SIZE);
 	fclose(fptr);
-	printf("Page faults: %d\n",faultCount);
+	printf("Total addresses: %d\n", totalAddr);
+	printf("Page_faults: %d\n",faultCount);
+	printf("TLB Hits: %d\n",hitCount);
+	//////////////////////////////////////////////
+	
+	//for(i = 0; i < PAGE_SIZE; i++){
+	//	free(physical_memory[i]);
+	//}
+	//free(physical_memory);
+	/////////////////////////////////////////////////////
 	return 0;
 }
