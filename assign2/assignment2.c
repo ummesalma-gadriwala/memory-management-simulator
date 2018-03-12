@@ -107,7 +107,7 @@ int main(void) {
 	for (i = 0; i < PAGES; i++) {
 		page_table[i] = -1;
 	}
-	
+
 	int nextFrame = 0;
 	int nextTLBFrame = 0;
 	/**************HANDLING PAGE FAULTS**************/
@@ -163,7 +163,8 @@ int main(void) {
 		}
 		physicalAddress = (frameNumber << OFFSET_BITS) | offset;
 		value = physical_memory[frameNumber][offset];
-		printf("Virtual address: %d Page#:%d Offset:%d Physical address = %d Value=%d \n", logicalAddress, pageNumber, offset, physicalAddress, value);
+		printf("Virtual address: %d Page#:%d Offset:%d Physical address = %d Value=%d \n",
+		 logicalAddress, pageNumber, offset, physicalAddress, value);
 	}
 	munmap(mmapfptr, BS_SIZE);
 	fclose(fptr);
