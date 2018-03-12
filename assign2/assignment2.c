@@ -32,37 +32,36 @@ Number of entries in TLB = 16
 typedef struct {
 	int pageNumber;
 	int frameNumber;
-}TLBentry ;
+} TLBentry;
 
 /////////////////////////////////////////////
 TLBentry *TLBarray[TLB_SIZE];
-/////////////////////////////////////////////////
+////////////////////////////////////////////
 
-/* return frameNumber corresponding to pageNumber */
-int search_TLB(int pageNumber) {
+// return frameNumber of page, -1 if page does not exist in TLB 
+int search_TLB(int page) {
 	int i;
-	for(i = 0; i < TLB_SIZE; i++){
-		if (TLBarray[i]-> pageNumber == pageNumber){
+	for(i = 0; i < TLB_SIZE; i++) {
+		if (TLBarray[i]->pageNumber == page) {
 			return TLBarray[i]->frameNumber;
 		}
 	}
 	return -1;
-	
 }
 
-/* return 0 if success, -1 if error occurs */
+// return 0 if success, -1 if error occurs
 int TLB_Add(TLBentry *newEntry, int position) {
 	TLBarray[position%TLB_SIZE] = newEntry;
 	return position++;
 	
 }
 
-/* return 0 if success, -1 if error occurs */
-void TLB_Update(TLBentry *newEntry, int pageNumber) {
+// replacedPage and newPage have same location/frame in physical memory
+void TLB_Update(int replacedPage, int newPage) {
 	int i;
-	for(i = 0; i < TLB_SIZE; i++){
-		if (TLBarray[i]-> pageNumber == pageNumber){
-			TLBarray[i] = newEntry;
+	for (i = 0; i < TLB_SIZE; i++) {
+		if (TLBarray[i]->pageNumber == replacedPage){
+			TLBarray[i]->pageNumber = newPage;
 		}
 	}
 }
@@ -82,11 +81,12 @@ int main(void) {
 	int i;
 	int page_table[PAGES];
 	char *physical_memory[FRAMES];
-
-///////////////////////////             
-	
-	for(i = 0; i < TLB_SIZE; i++){
-		TLBarray[i] = (TLBentry *) malloc (sizeof(TLBentry));
+////////////////////////////////////////////	
+	for(i = 0; i < TLB_SIZE; i++) {
+		TLBentry *t = (TLBentry *) malloc (sizeof(TLBentry));
+		t->pageNumber = -1;
+		t->frameNumber = -1;
+		TLBarray[i] = t;
 	}
 ////////////////////////////////////////////
     for(i = 0; i < FRAMES; i++) {
@@ -113,35 +113,35 @@ int main(void) {
 		pageNumber = logicalAddress >> OFFSET_BITS;
 		offset = logicalAddress & OFFSET_MASK;		
 		// LOOK UP TLB
-		//////////////////////////////////////
+		////////////////////////////////////////////
 		frameNumber = search_TLB(pageNumber);
-		if(frameNumber != -1){
+		//printf("TLB frame: %d\n", frameNumber);
+		if (frameNumber != -1) { // found in TLB
 			hitCount++;
-		}else{
-		//////////////////////////////////////
-		// LOOK UP IN PAGE TABLE
+		} else { // not found in TLB
+		////////////////////////////////////////////
+			// LOOK UP IN PAGE TABLE
 			frameNumber = page_table[pageNumber];
-		}
-		
-		// when page fault occurs
-		if (frameNumber == -1) {
-			faultCount++;
-			// get the page at the pageNumber from the mapped data
-			// put it in the next available frame
-			// change the page table entry
-			memcpy(physical_memory[nextFrame%FRAMES], mmapfptr + (pageNumber*256), 256);
-			for (i = 0; i < PAGES; i++) {
-				if (page_table[i] == nextFrame%FRAMES)
-					page_table[i] = -1;
+			//printf("page table frame: %d\n", frameNumber);
+			// when page fault occurs
+			if (frameNumber == -1) {
+				faultCount++;
+				// get the page at the pageNumber from the mapped data
+				// put it in the next available frame
+				// change the page table entry
+				memcpy(physical_memory[nextFrame%FRAMES], mmapfptr + (pageNumber*256), 256);
+				for (i = 0; i < PAGES; i++) {
+					if (page_table[i] == nextFrame%FRAMES)
+						page_table[i] = -1;
+				}
+				page_table[pageNumber] = nextFrame%FRAMES;
+				frameNumber = page_table[pageNumber];
+				nextFrame++;
 			}
-			page_table[pageNumber] = nextFrame%FRAMES;
-			frameNumber = page_table[pageNumber];
-			nextFrame++;
 		}
 		physicalAddress = (frameNumber << OFFSET_BITS) | offset;
 		value = physical_memory[frameNumber][offset];
-		printf("Virtual address: %d Physical address = %d Value=%d\n",
-		logicalAddress, frameNumber, physicalAddress, value);
+		printf("Virtual address: %d Page#:%d Offset:%d Physical address = %d Value=%d\n", logicalAddress, pageNumber, offset, physicalAddress, value);
 	}
 	munmap(mmapfptr, BS_SIZE);
 	fclose(fptr);
@@ -149,11 +149,13 @@ int main(void) {
 	printf("Page_faults: %d\n",faultCount);
 	printf("TLB Hits: %d\n",hitCount);
 	//////////////////////////////////////////////
-	
-	//for(i = 0; i < PAGE_SIZE; i++){
-	//	free(physical_memory[i]);
-	//}
-	//free(physical_memory);
+	// deallocate memory on the heap
+	for(i = 0; i < FRAMES; i++) {
+		free(physical_memory[i]);
+	}
+	for(i = 0; i < TLB_SIZE; i++) {
+		free(TLBarray[i]);
+	}
 	/////////////////////////////////////////////////////
 	return 0;
 }
