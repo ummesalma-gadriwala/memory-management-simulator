@@ -163,7 +163,7 @@ int main(void) {
 		}
 		physicalAddress = (frameNumber << OFFSET_BITS) | offset;
 		value = physical_memory[frameNumber][offset];
-		printf("Virtual address: %d Page#:%d Offset:%d Physical address = %d Value=%d\n", logicalAddress, pageNumber, offset, physicalAddress, value);
+		printf("Virtual address: %d Page#:%d Offset:%d Physical address = %d Value=%d \n", logicalAddress, pageNumber, offset, physicalAddress, value);
 	}
 	munmap(mmapfptr, BS_SIZE);
 	fclose(fptr);
