@@ -49,21 +49,33 @@ int search_TLB(int page) {
 	return -1;
 }
 
-// return 0 if success, -1 if error occurs
-int TLB_Add(TLBentry *newEntry, int position) {
-	TLBarray[position%TLB_SIZE] = newEntry;
-	return position++;
-	
+// return new position of the oldest entry in TLB
+//int TLB_Add(TLBentry *newEntry, int oldestEntryPosition) {
+//	TLBarray[oldestEntryPosition%TLB_SIZE] = newEntry;
+//	oldestEntryPosition++;
+//	return oldestEntryPosition;
+//}
+
+// return new position of the oldest entry in TLB
+// update page and frame numbers at position
+int TLB_Add(int page, int frame, int oldestEntryPosition) {
+	TLBarray[oldestEntryPosition%TLB_SIZE]->pageNumber = page;
+	TLBarray[oldestEntryPosition%TLB_SIZE]->frameNumber = frame;
+	oldestEntryPosition++;
+	return oldestEntryPosition;
 }
 
 // replacedPage and newPage have same location/frame in physical memory
-void TLB_Update(int replacedPage, int newPage) {
+// return 0 if updated, -1 if not
+int TLB_Update(int replacedPage, int newPage) {
 	int i;
 	for (i = 0; i < TLB_SIZE; i++) {
 		if (TLBarray[i]->pageNumber == replacedPage){
 			TLBarray[i]->pageNumber = newPage;
+			return 0;
 		}
 	}
+	return -1;
 }
 
 int main(void) {
@@ -95,8 +107,9 @@ int main(void) {
 	for (i = 0; i < PAGES; i++) {
 		page_table[i] = -1;
 	}
-	int nextFrame = 0;
 	
+	int nextFrame = 0;
+	int nextTLBFrame = 0;
 	/**************HANDLING PAGE FAULTS**************/
 		// open file in read-only mode
 	int fBS = open("BACKING_STORE.bin", O_RDONLY);
@@ -115,28 +128,34 @@ int main(void) {
 		// LOOK UP TLB
 		////////////////////////////////////////////
 		frameNumber = search_TLB(pageNumber);
-		//printf("TLB frame: %d\n", frameNumber);
 		if (frameNumber != -1) { // found in TLB
 			hitCount++;
 		} else { // not found in TLB
 		////////////////////////////////////////////
 			// LOOK UP IN PAGE TABLE
+				// found in page table
 			frameNumber = page_table[pageNumber];
-			//printf("page table frame: %d\n", frameNumber);
-			// when page fault occurs
+				// add to TLB
+			nextTLBFrame = TLB_Add(pageNumber, frameNumber, nextTLBFrame);
+				// when page fault occurs
 			if (frameNumber == -1) {
 				faultCount++;
 				// get the page at the pageNumber from the mapped data
 				// put it in the next available frame
 				// change the page table entry
+				// update page table
+				int old;
 				memcpy(physical_memory[nextFrame%FRAMES], mmapfptr + (pageNumber*256), 256);
 				for (i = 0; i < PAGES; i++) {
 					if (page_table[i] == nextFrame%FRAMES)
 						page_table[i] = -1;
+						old = i;
 				}
 				page_table[pageNumber] = nextFrame%FRAMES;
 				frameNumber = page_table[pageNumber];
 				nextFrame++;
+				int success = TLB_Update(old, pageNumber);
+				
 			}
 		}
 		physicalAddress = (frameNumber << OFFSET_BITS) | offset;
