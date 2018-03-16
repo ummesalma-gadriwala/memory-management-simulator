@@ -134,31 +134,35 @@ int main(void) {
 		////////////////////////////////////////////
 			// LOOK UP IN PAGE TABLE
 				// found in page table
-			frameNumber = page_table[pageNumber];
+			//frameNumber = page_table[pageNumber];
 				// add to TLB
 			if (frameNumber != -1) {
 				nextTLBFrame = TLB_Add(pageNumber, frameNumber, nextTLBFrame);
 				// when page fault occurs
-			} else if (frameNumber == -1) {
-				faultCount++;
+			} else {
+				if (page_table[pageNumber]==-1){
+					faultCount++;
 				// get the page at the pageNumber from the mapped data
 				// put it in the next available frame
 				// change the page table entry
 				// update page table
-				int oldPage;
-				memcpy(physical_memory[nextFrame%FRAMES], mmapfptr + (pageNumber*256), 256);
-				for (i = 0; i < PAGES; i++) {
-					if (page_table[i] == nextFrame%FRAMES) {
-						page_table[i] = -1;
-						oldPage = i;
+					int oldPage;
+					memcpy(physical_memory[nextFrame%FRAMES], mmapfptr + (pageNumber*256), 256);
+					for (i = 0; i < PAGES; i++) {
+						if (page_table[i] == nextFrame%FRAMES) {
+							page_table[i] = -1;
+							oldPage = i;
+						}
 					}
+					page_table[pageNumber] = nextFrame%FRAMES;
+					frameNumber = page_table[pageNumber];
+					nextFrame++;
+					int success = TLB_Update(oldPage, pageNumber);
+					if (success == -1){
+						nextTLBFrame = TLB_Add(pageNumber, frameNumber, nextTLBFrame);
+					}
+					frameNumber = page_table[pageNumber];				
 				}
-				page_table[pageNumber] = nextFrame%FRAMES;
-				frameNumber = page_table[pageNumber];
-				nextFrame++;
-				int success = TLB_Update(oldPage, pageNumber);
-				if (success == -1)
-					nextTLBFrame = TLB_Add(pageNumber, frameNumber, nextTLBFrame);
 			}
 		}
 		physicalAddress = (frameNumber << OFFSET_BITS) | offset;
