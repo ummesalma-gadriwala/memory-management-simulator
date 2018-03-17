@@ -52,9 +52,9 @@ int search_TLB(int page) {
 // return new position of the oldest entry in TLB
 // update page and frame numbers at position
 int TLB_Add(int page, int frame, int oldestEntry) {
-	TLBarray[oldestEntryPosition%TLB_SIZE]->pageNumber = page;
-	TLBarray[oldestEntryPosition%TLB_SIZE]->frameNumber = frame;
-	oldestEntryPosition++;
+	TLBarray[oldestEntry%TLB_SIZE]->pageNumber = page;
+	TLBarray[oldestEntry%TLB_SIZE]->frameNumber = frame;
+	oldestEntry++;
 	return oldestEntry;
 }
 
