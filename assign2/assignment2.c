@@ -51,11 +51,11 @@ int search_TLB(int page) {
 
 // return new position of the oldest entry in TLB
 // update page and frame numbers at position
-int TLB_Add(int page, int frame, int oldestEntryPosition) {
+int TLB_Add(int page, int frame, int oldestEntry) {
 	TLBarray[oldestEntryPosition%TLB_SIZE]->pageNumber = page;
 	TLBarray[oldestEntryPosition%TLB_SIZE]->frameNumber = frame;
 	oldestEntryPosition++;
-	return oldestEntryPosition;
+	return oldestEntry;
 }
 
 // replacedPage and newPage have same location/frame in physical memory
@@ -73,7 +73,7 @@ int TLB_Update(int replacedPage, int newPage) {
 
 int main(void) {
 	FILE *fptr = fopen("addresses.txt", "r");
-	char buff[BUFFER_SIZE];
+	char buff[BUFFER_SIZE]; // for reading from file
 	unsigned int logicalAddress;
 	int physicalAddress;
 	signed char value;
@@ -83,7 +83,7 @@ int main(void) {
 	int offset;
 	int totalAddr = 0;
 	int frameNumber;
-	int i;
+	int i; // for loop counter
 	int page_table[PAGES];
 	char *physical_memory[FRAMES];
 ////////////////////////////////////////////	
@@ -141,7 +141,7 @@ int main(void) {
 				int oldPage = -1;
 				memcpy(physical_memory[nextFrame%FRAMES], mmapfptr + (pageNumber*256), 256);
 				for (i = 0; i < PAGES; i++) {
-					if (page_table[i] == nextFrame%FRAMES) {
+					if (page_table[i] == (nextFrame%FRAMES)) {
 						page_table[i] = -1;
 						oldPage = i;
 					}
