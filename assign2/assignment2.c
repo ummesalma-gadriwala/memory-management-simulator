@@ -50,13 +50,6 @@ int search_TLB(int page) {
 }
 
 // return new position of the oldest entry in TLB
-//int TLB_Add(TLBentry *newEntry, int oldestEntryPosition) {
-//	TLBarray[oldestEntryPosition%TLB_SIZE] = newEntry;
-//	oldestEntryPosition++;
-//	return oldestEntryPosition;
-//}
-
-// return new position of the oldest entry in TLB
 // update page and frame numbers at position
 int TLB_Add(int page, int frame, int oldestEntryPosition) {
 	TLBarray[oldestEntryPosition%TLB_SIZE]->pageNumber = page;
@@ -140,30 +133,27 @@ int main(void) {
 				nextTLBFrame = TLB_Add(pageNumber, frameNumber, nextTLBFrame);
 				// when page fault occurs
 			} else {
-				//if (page_table[pageNumber]==-1){
-					faultCount++;
+				faultCount++;
 				// get the page at the pageNumber from the mapped data
 				// put it in the next available frame
 				// change the page table entry
 				// update page table
-					int oldPage;
-					memcpy(physical_memory[nextFrame%FRAMES], mmapfptr + (pageNumber*256), 256);
-					for (i = 0; i < PAGES; i++) {
-						if (page_table[i] == nextFrame%FRAMES) {
-							page_table[i] = -1;
-							oldPage = i;
-						}
+				int oldPage = -1;
+				memcpy(physical_memory[nextFrame%FRAMES], mmapfptr + (pageNumber*256), 256);
+				for (i = 0; i < PAGES; i++) {
+					if (page_table[i] == nextFrame%FRAMES) {
+						page_table[i] = -1;
+						oldPage = i;
 					}
-					page_table[pageNumber] = nextFrame%FRAMES;
-					frameNumber = page_table[pageNumber];
-					nextFrame++;
-					int success = TLB_Update(oldPage, pageNumber);
-					if (success == -1){
-						nextTLBFrame = TLB_Add(pageNumber, frameNumber, nextTLBFrame);
-					}
-					frameNumber = page_table[pageNumber];				
 				}
-			//}
+				page_table[pageNumber] = nextFrame%FRAMES;
+				frameNumber = page_table[pageNumber];
+				nextFrame++;
+				int success = TLB_Update(oldPage, pageNumber);
+				if (success == -1) {
+					nextTLBFrame = TLB_Add(pageNumber, frameNumber, nextTLBFrame);
+				}
+			}
 		}
 		physicalAddress = (frameNumber << OFFSET_BITS) | offset;
 		value = physical_memory[frameNumber][offset];
@@ -183,6 +173,6 @@ int main(void) {
 	for(i = 0; i < TLB_SIZE; i++) {
 		free(TLBarray[i]);
 	}
-	/////////////////////////////////////////////////////
+	//////////////////////////////////////////////
 	return 0;
 }
