@@ -1,5 +1,5 @@
-Tasnim Noshin 400043624 noshint
+Tasnim Noshin
 TLB, Handling Page Faults
-Umme Salma Gadriwala 400021431 gadriwau
+Umme Salma Gadriwala
 Address Translation, Handling Page Faults
 
